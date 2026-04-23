@@ -1,5 +1,9 @@
-# simple_keylogger
+# My First Keylogger
 A complete parent-child C2 keylogger system designed for authorized cybersecurity training environments. Demonstrates realistic malware persistence, incremental logging, stealth execution, and automated exfiltration techniques.**
+This was created in 2 days, still many things to fix and add. 
+
+Next versions will inlcude **pure_no_exit32.exe** to download the C2 beacon itself. 
+Following plan is to multiple persistence methods and remove any obivous footprint within the system.
 
 # Working Parts
 
