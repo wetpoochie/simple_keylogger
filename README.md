@@ -1,52 +1,57 @@
-# C2 Stealth Toolkit: "Halo-Persistent"
+# 🛡️ Endpoint Telemetry Lab: “Halo-Persistent” (Defensive Training)
 
-![C2 Architecture](https://img.shields.io/badge/Architecture-Parent--Child-blue)
+![Architecture](https://img.shields.io/badge/Architecture-Parent--Child-blue)
 ![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
-![Security](https://img.shields.io/badge/Purpose-Educational%20Training-red)
+![Purpose](https://img.shields.io/badge/Purpose-Educational%20Training-green)
 
-A lightweight, dual-process C2 (Command & Control) framework developed for cybersecurity training environments. This toolkit demonstrates realistic malware techniques including stealth execution, parent-child process persistence, and automated data exfiltration via HTTP POST.
+A lightweight, dual-process **endpoint telemetry and detection lab** developed for controlled cybersecurity training environments. This project simulates realistic system behaviors such as continuous input handling, parent–child process relationships, and periodic HTTP communication—allowing students to practice **detection, analysis, and forensic investigation**.
+
+> ⚠️ This project is designed for **defensive security training only**. All behavior should be transparent, consent-based, and executed within isolated lab environments.
 
 ---
 
 ## 🛠 Project Architecture & Component Breakdown
 
-The system utilizes a **Parent-Child process model** to ensure modularity and reduce the forensic footprint of individual binaries. Both components are compiled for the `Windows (GUI)` subsystem to ensure zero console visibility.
+The system utilizes a **Parent–Child process model** to generate correlated telemetry across process, file, and network layers. Both components are compiled for the `Windows (GUI)` subsystem.
 
 | Component | Bin Size | Dependencies | Role |
 | :--- | :--- | :--- | :--- |
-| **pure_no_exit32.exe** | ~12KB | `kernel32`, `user32` | Persistent Stealth Logger |
-| **halo_persistent32.exe**| ~18KB | `wininet`, `kernel32` | C2 Beacon & Exfiltrator |
+| **pure_no_exit32.exe** | ~12KB | `kernel32`, `user32` | Telemetry Agent (Input + Logging) |
+| **halo_persistent32.exe** | ~18KB | `wininet`, `kernel32` | Network Emitter (HTTP Communication) |
 
-### Component Mechanics
+---
 
-#### 1. Persistent Logger (`pure_no_exit32.exe`)
-* **Global Capture Engine:** Implements low-level monitoring via `GetAsyncKeyState()`.
-* **The "Enter" Trigger:** Captures data silently until `VK_RETURN` (ENTER) is detected. On trigger:
-    * Flushes current keystroke buffer to `C:\Temp\log.log` (Append mode).
-    * Spawns `halo_persistent32.exe` (C2 Beacon) as a hidden background process.
-    * Resets the local buffer and continues logging without interruption.
-* **Overflow Protection:** Includes an automated safety check; if the buffer exceeds 255 characters, the tool auto-saves to prevent memory corruption or data loss.
-* **Stealth Subsystem:** Compiled with the `-mwindows` flag to run without a console window, taskbar icon, or visible UI.
+## ⚙️ Component Mechanics
 
-#### 2. C2 Beacon (`halo_persistent32.exe`)
-* **Exfiltration Logic:** Periodically reads the `C:\Temp\log.log` artifact and performs an HTTP POST of the full log content to the remote C2 server.
-* **Heartbeat/Timing:** Configured for high-frequency 5-second beacon intervals.
-* **Parent-Awareness (Persistence):** Monitors the parent process handle; the beacon automatically terminates if `pure_no_exit32.exe` is closed, preventing "orphan" process detection.
-* **Native Net-Stack:** Leverages the `WinINet` API for realistic web communication that mirrors standard application traffic.
+### 1. Telemetry Agent (`pure_no_exit32.exe`)
+
+* **Input Monitoring Engine:** Demonstrates high-frequency input polling using standard Windows APIs.
+* **Trigger Mechanism:** Buffers input data until a defined event (e.g., `ENTER` key) occurs:
+  * Writes buffered data to `C:\Temp\log.log` (append mode)
+  * Spawns the Network Emitter process
+  * Resets internal buffer and continues operation
+* **Overflow Protection:** Automatically writes to disk if buffer exceeds 255 characters to prevent data loss.
+* **Execution Model:** Compiled with `-mwindows` (GUI subsystem).
+
+---
+
+### 2. Network Emitter (`halo_persistent32.exe`)
+
+* **Data Transmission:** Periodically reads `C:\Temp\log.log` and sends contents to a configured lab endpoint via HTTP POST.
+* **Beacon Timing:** Default interval set to 5 seconds for consistent, observable traffic patterns.
+* **Process Awareness:** Monitors parent process; exits automatically if parent terminates (useful for studying process relationships).
+* **Networking Stack:** Uses Windows `WinINet` API to simulate standard application-layer traffic.
 
 ---
 
 ## 🏗 Build & Deployment
 
-### Cross-Compilation (Linux to Windows)
-The toolkit is optimized for the `MinGW-w64` toolchain on Ubuntu/Debian.
+### Cross-Compilation (Linux → Windows)
 
-**1. Install Toolchain:**
+Optimized for the `MinGW-w64` toolchain on Ubuntu/Debian.
+
+### 1. Install Toolchain
+
 ```bash
-sudo apt update && sudo apt install gcc-mingw-w64-i686 nasm-mingw-w64
-
-# Build Keylogger (pure_no_exit32.exe)
-i686-w64-mingw32-gcc -m32 pure_no_exit.c -o pure_no_exit32.exe -lkernel32 -luser32 -mwindows -s -O2
-
-# Build C2 Beacon (halo_persistent32.exe)
-i686-w64-mingw32-gcc -m32 halo_persistent.c -o halo_persistent32.exe -lwininet -lkernel32 -luser32 -mwindows -s -O2
+sudo apt update
+sudo apt install gcc-mingw-w64-i686 nasm-mingw-w64
