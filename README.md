@@ -1,4 +1,4 @@
-# 🛡️ Simple Project : “Halo-Keylogger" (MalDev Training)
+# “Project-Keylogger"
 
 ![Architecture](https://img.shields.io/badge/Architecture-Parent--Child-blue)
 ![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
